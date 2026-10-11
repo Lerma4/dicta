@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Dicta",
+  "version": "0.1.0",
+  "identifier": "app.dicta.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {"label":"main","title":"Dicta","width":1120,"height":780,"minWidth":760,"minHeight":580},
+      {"label":"overlay","title":"Dicta — Dettatura","url":"overlay.html","width":400,"height":100,"decorations":false,"alwaysOnTop":true,"focus":false,"focusable":false,"visible":false,"skipTaskbar":true,"resizable":false}
+    ],
+    "security": {"csp":"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src ipc: http://ipc.localhost; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"}
+  },
+  "bundle": {
+    "active":true,
+    "targets":["app","dmg"],
+    "category":"Productivity",
+    "shortDescription":"Dettatura privata, sul tuo Mac.",
+    "macOS":{"minimumSystemVersion":"12.0","entitlements":"Entitlements.plist"}
+  }
+}
