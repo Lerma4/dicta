@@ -165,7 +165,7 @@ mod native {
             return Err(match status {
                 1 => "Accessibility permission is required to identify the text field.",
                 2 => "No safe editable field is focused.",
-                3 => "Dicta cannot dictate into its own window.",
+                3 => "Dicta è attivo: avvia con la scorciatoia nell’app in cui vuoi scrivere, oppure copia il testo da Dicta",
                 4 => "The focused field is secure.",
                 _ => "Could not identify the focused application.",
             }

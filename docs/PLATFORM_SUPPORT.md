@@ -2,7 +2,7 @@
 
 macOS Apple Silicon is the implemented target. CPAL CoreAudio input, Metal/CPU Whisper, configurable global hotkey (hold/toggle), tray/autostart, public AX insertion and AVFoundation permissions are present. TCC must be granted to the actual app identity; development executables/rebuilt unsigned bundles can have different permission behavior. Denied microphone access requires System Settings → Privacy & Security → Microphone; Accessibilità requests open Apple's trust prompt.
 
-The overlay stays non-focusable and uses public all-Spaces/fullscreen auxiliary collection behavior. It positions at the top/bottom of the screen containing the pointer, with a fixed bottom margin for the Dock. Dynamic large Dock/Stage Manager, protected fullscreen, multi-monitor arrangements and Spaces require manual verification. It is opaque; no private API or transparent macOS window feature is enabled.
+The overlay stays non-focusable and uses public all-Spaces/fullscreen auxiliary collection behavior. It uses a transparent window and positions at the top/bottom of the screen containing the pointer, inside macOS's visible frame. Dynamic Dock/Stage Manager, protected fullscreen, multi-monitor arrangements and Spaces require manual verification.
 
 Machine sleep and display sleep cancel sessions. Screen lock without display sleep is not reliably detected by the chosen public API; recording is still bounded to five minutes and insertion requires original focus. Unexpected process death loses active PCM and RAM recovery text; SQLite marks unfinished sessions interrupted on the next launch.
 

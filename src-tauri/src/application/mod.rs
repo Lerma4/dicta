@@ -96,6 +96,7 @@ impl Runtime {
             s.clone()
         };
         let _ = app.emit("dictation-state", &snapshot);
+        let delay = phase_delay(phase, snapshot.recovery_pending);
         if let Some(window) = app.get_webview_window("overlay") {
             if phase == Phase::Idle {
                 let _ = window.hide();
@@ -107,7 +108,7 @@ impl Runtime {
             if let Some(id) = snapshot.session_id {
                 let tx = self.controls.clone();
                 std::thread::spawn(move || {
-                    std::thread::sleep(Duration::from_millis(phase_delay(phase)));
+                    std::thread::sleep(Duration::from_millis(delay));
                     let _ = tx.send(Control::Reset(id));
                 });
             }
@@ -134,8 +135,8 @@ impl Runtime {
     }
 }
 
-fn phase_delay(phase: Phase) -> u64 {
-    if phase == Phase::Error {
+fn phase_delay(phase: Phase, recovery_pending: bool) -> u64 {
+    if phase == Phase::Error || recovery_pending {
         5000
     } else {
         1800
@@ -461,9 +462,9 @@ fn finish_recording(
             session.text = Some(text);
             let message = match inserted {
                 Ok(()) => "Testo inserito.".into(),
-                Err(_) => {
+                Err(error) => {
                     session.error_category = Some("insertion_recovery".into());
-                    "Testo pronto. Il campo originale non è disponibile: apri Dicta e copia il risultato.".into()
+                    format!("Testo non inserito: {error}. Copialo da Dicta.")
                 }
             };
             runtime.update(app, Phase::Completed, Some(message));
@@ -487,11 +488,24 @@ fn position_overlay(app: &AppHandle, settings: &Settings) {
             let x = bounds.x + (bounds.width - 400.0) / 2.0;
             let y = bounds.y
                 + if settings.overlay_position == "top" {
-                    60.0
+                    20.0
                 } else {
-                    bounds.height - 180.0
+                    bounds.height - 100.0 - 20.0
                 };
             let _ = window.set_position(tauri::LogicalPosition::new(x, y));
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::phase_delay;
+    use crate::state::Phase;
+
+    #[test]
+    fn keeps_recovery_visible_longer_than_success() {
+        assert_eq!(phase_delay(Phase::Completed, false), 1800);
+        assert_eq!(phase_delay(Phase::Completed, true), 5000);
+        assert_eq!(phase_delay(Phase::Error, false), 5000);
     }
 }

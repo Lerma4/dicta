@@ -5,5 +5,5 @@ export default defineConfig({
   plugins: [react()],
   server: { host: '127.0.0.1', port: 1420, strictPort: true },
   build: { rollupOptions: { input: ['index.html', 'overlay.html'] } },
-  test: { environment: 'jsdom', setupFiles: './src/test-setup.ts' },
+  test: { environment: 'jsdom', setupFiles: './src/test-setup.ts', exclude: ['**/node_modules/**', '**/dist/**', '**/src-tauri/target/**'] },
 })

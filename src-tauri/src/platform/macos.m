@@ -154,11 +154,11 @@ static int active_display_bounds_main(double *out) {
     if (!screen) screen = NSScreen.mainScreen;
     NSScreen *primary = NSScreen.screens.firstObject;
     if (!screen || !primary) return 1;
-    NSRect frame = screen.frame;
-    out[0] = frame.origin.x;
-    out[1] = NSMaxY(primary.frame) - NSMaxY(frame);
-    out[2] = frame.size.width;
-    out[3] = frame.size.height;
+    NSRect visible = screen.visibleFrame;
+    out[0] = visible.origin.x;
+    out[1] = NSMaxY(primary.frame) - NSMaxY(visible);
+    out[2] = visible.size.width;
+    out[3] = visible.size.height;
     return 0;
 }
 
@@ -172,6 +172,8 @@ static int configure_overlay_main(void *window_ptr) {
     if (!window_ptr) return 1;
     NSWindow *window = (__bridge NSWindow *)window_ptr;
     window.collectionBehavior |= NSWindowCollectionBehaviorCanJoinAllSpaces | NSWindowCollectionBehaviorFullScreenAuxiliary;
+    window.opaque = NO;
+    window.backgroundColor = NSColor.clearColor;
     window.ignoresMouseEvents = NO;
     return 0;
 }

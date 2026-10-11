@@ -52,10 +52,11 @@ describe('overlay state feedback', () => {
   })
 
   it('shows recovery only when insertion failed and copies via the native command', async () => {
-    const failed = { ...value('completed'), message: 'Testo pronto: copia il risultato.', recovery_text: 'Ciao Dicta', recovery_pending: true }
+    const failed = { ...value('completed'), message: 'Testo non inserito: nessun campo esterno attivo. Copialo da Dicta.', recovery_text: 'Ciao Dicta', recovery_pending: true }
     vi.mocked(api.snapshot).mockResolvedValue(failed)
     render(<Overlay />)
-    expect(await screen.findByText('Testo pronto: copia il risultato.')).toBeInTheDocument()
+    expect(await screen.findByText('Testo pronto da copiare')).toBeInTheDocument()
+    expect(await screen.findByText(failed.message!)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Copia il testo recuperabile' }))
     expect(api.copyRecovery).toHaveBeenCalledOnce()
   })

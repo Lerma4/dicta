@@ -26,7 +26,7 @@ export function Home({ settings, snapshot, permissions, setPermissions, models, 
   return <>
     <PageTitle overline="IL TUO SPAZIO" title="Buongiorno, che cosa vuoi dire?" detail="La tua voce diventa testo, direttamente su questo Mac." />
     <section className="hero-card">
-      <div className="hero-copy"><Eyebrow><span className="mini-pulse" /> DETTATURA LOCALE</Eyebrow><h2>Le parole arrivano<br />quando sei pronto.</h2><p>{ready ? 'Tutto pronto per una nuova idea. Dicta ascolta solo mentre detti.' : !modelReady ? 'Una volta scaricato il modello, puoi dettare anche senza connessione.' : 'Concedi l’accesso al microfono per iniziare.'}</p>
+      <div className="hero-copy"><Eyebrow><span className="mini-pulse" /> DETTATURA LOCALE</Eyebrow><h2>Le parole arrivano<br />quando sei pronto.</h2><p>{ready ? 'Per inserire testo in un’altra app, attiva il campo e usa la scorciatoia. Il pulsante qui prepara testo da copiare.' : !modelReady ? 'Una volta scaricato il modello, puoi dettare anche senza connessione.' : 'Concedi l’accesso al microfono per iniziare.'}</p>
         <Button className="primary start-button" disabled={(!ready && !recording) || busy || transitioning} busy={busy} onClick={() => invokeAction(recording ? api.stop : api.start)}><Mic size={16} />{recording ? 'Termina dettatura' : transitioning ? 'Elaboro…' : 'Inizia a dettare'}<span className="keycap">{formatShortcut(settings?.shortcut)}</span></Button>
         {!ready && <small className="inline-hint">Installa un modello per iniziare</small>}
       </div>

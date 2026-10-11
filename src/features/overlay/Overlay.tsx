@@ -19,7 +19,7 @@ export function Overlay() {
   const content: Record<string, { title: string; detail: string }> = {
     idle: { title: 'Dicta è pronto', detail: 'Premi la scorciatoia per iniziare' }, preparing: { title: 'Mi preparo…', detail: 'Attivo il microfono' },
     recording: { title: snapshot?.speech ? 'Ti ascolto' : 'In ascolto', detail: snapshot?.speech ? 'Sto raccogliendo le tue parole' : 'Parla quando vuoi' }, processing: { title: 'Metto in ordine le parole', detail: 'Elaborazione sul dispositivo' },
-    inserting: { title: 'Quasi fatto', detail: 'Inserisco il testo nella finestra attiva' }, completed: { title: 'Dettatura completata', detail: snapshot?.message ?? 'Dettatura completata' },
+    inserting: { title: 'Quasi fatto', detail: 'Inserisco il testo nella finestra attiva' }, completed: { title: snapshot?.recovery_pending ? 'Testo pronto da copiare' : 'Dettatura completata', detail: snapshot?.message ?? 'Dettatura completata' },
     cancelled: { title: 'Dettatura annullata', detail: 'La registrazione è stata interrotta' }, error: { title: 'Non è andata', detail: snapshot?.message ?? 'Puoi riprovare o copiare il testo' },
   }
   const current = content[state] ?? content.idle
