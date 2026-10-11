@@ -1,0 +1,38 @@
+import { useEffect, useState } from 'react'
+import { Check, Download, Mic2, ShieldCheck, Trash2 } from 'lucide-react'
+import type { InputDevice, ModelInfo, Permissions, Settings } from '../../types/contracts'
+import { api } from '../../services/desktop'
+import { Button, Card, Empty, Eyebrow, Notice, PageTitle, Toggle } from '../../components/ui'
+import { whisperLanguages } from '../../types/languages'
+
+type Props = { settings: Settings | null; setSettings: (s: Settings) => void; permissions: Permissions | null; setPermissions: (p: Permissions) => void; models: ModelInfo[]; act: (job: () => Promise<unknown>) => Promise<boolean> }
+export function SettingsPage({ settings, setSettings, permissions, setPermissions, models, act }: Props) {
+  const [devices, setDevices] = useState<InputDevice[]>([]); const [saved, setSaved] = useState(false); const [exported, setExported] = useState('')
+  useEffect(() => { void api.devices().then(setDevices).catch(() => {}) }, [])
+  if (!settings) return <><PageTitle overline="PREFERENZE" title="Impostazioni" detail="Dicta desktop è necessario per leggere o salvare le preferenze."/><Card><Empty title="Impostazioni non disponibili" detail="Le preferenze vengono lette dal dispositivo, senza account o sincronizzazione." /></Card></>
+  const patch = (values: Partial<Settings>) => setSettings({ ...settings, ...values })
+  const save = () => { void act(() => api.saveSettings(settings)).then(ok => { if (ok) { setSaved(true); window.setTimeout(() => setSaved(false), 1800) } }) }
+  const permission = (kind: 'microphone' | 'accessibility') => act(async () => { await api.requestPermission(kind); setPermissions(await api.permissions()) })
+  const exportFile = async (kind: 'sessions' | 'transcripts', format: 'json' | 'csv') => { const path = await api.exportFile(kind, format); if (path) setExported(path) }
+  return <>
+    <PageTitle overline="IL TUO DICTa" title="Impostazioni" detail="Un’esperienza che si adatta al tuo modo di parlare." />
+    <Card className="settings-card"><div className="settings-heading"><span className="settings-icon"><Mic2 size={17}/></span><div><Eyebrow>DETTATURA</Eyebrow><h3>Voce e scorciatoie</h3></div></div>
+      <div className="settings-grid"><label className="field"><span>Lingua di dettatura</span><select value={settings.language} onChange={e => patch({ language: e.target.value })}><option value="auto">Rileva automaticamente</option>{whisperLanguages.map(([code, name]) => <option key={code} value={code}>{name}</option>)}</select></label>
+      <label className="field"><span>Modello attivo</span><select value={settings.model_id} onChange={e => patch({ model_id: e.target.value })}>{models.filter(m => m.installed).map(m => <option value={m.id} key={m.id}>{m.name}</option>)}{!models.some(m => m.id === settings.model_id) && <option value={settings.model_id}>{settings.model_id}</option>}</select></label>
+      <label className="field"><span>Microfono</span><select value={settings.input_device ?? ''} onChange={e => patch({ input_device: e.target.value || null })}><option value="">Microfono predefinito</option>{devices.map(d => <option value={d.name} key={d.name}>{d.name}{d.is_default ? ' · predefinito' : ''}</option>)}</select></label>
+      <label className="field"><span>Scorciatoia globale</span><input value={settings.shortcut} onChange={e => patch({ shortcut: e.target.value })} aria-label="Scorciatoia globale" placeholder="⌘ ⇧ Spazio" /></label>
+      <label className="field"><span>Modalità scorciatoia</span><select value={settings.shortcut_mode} onChange={e => patch({ shortcut_mode: e.target.value as Settings['shortcut_mode'] })}><option value="toggle">Premi per avviare e fermare</option><option value="hold">Tieni premuto per dettare</option></select></label>
+      <label className="field"><span>Posizione overlay</span><select value={settings.overlay_position} onChange={e => patch({ overlay_position: e.target.value as Settings['overlay_position'] })}><option value="bottom">In basso</option><option value="top">In alto</option></select></label>
+      </div><div className="range-row"><label htmlFor="vad-range">Sensibilità al silenzio</label><input id="vad-range" type="range" min="0.002" max="0.05" step="0.001" value={settings.vad_threshold} onChange={e => patch({ vad_threshold: Number(e.target.value) })}/><span>{settings.vad_threshold.toFixed(3)}</span></div>
+    </Card>
+    <Card className="settings-card"><div className="settings-heading"><span className="settings-icon"><ShieldCheck size={17}/></span><div><Eyebrow>PRIVACY E SISTEMA</Eyebrow><h3>Tu decidi cosa conservare</h3></div></div>
+      <Toggle label="Salva le trascrizioni in cronologia" checked={settings.history_enabled} onChange={history_enabled => patch({ history_enabled })}/>
+      {settings.history_enabled && <label className="field retention"><span>Elimina automaticamente dopo</span><select value={settings.retention_days} onChange={e => patch({ retention_days: Number(e.target.value) })}><option value={7}>7 giorni</option><option value={30}>30 giorni</option><option value={90}>90 giorni</option><option value={365}>1 anno</option></select></label>}
+      <Toggle label="Avvia Dicta all’accesso" checked={settings.autostart} onChange={autostart => patch({ autostart })}/><Toggle label="Suoni dell’interfaccia" checked={settings.sounds} onChange={sounds => patch({ sounds })}/>
+      <div className="permission-lines"><div><span>Microfono</span><b>{permissions?.microphone === 'granted' ? 'Consentito' : permissions?.microphone === 'denied' ? 'Negato' : permissions?.microphone ?? 'Non verificato'}</b><Button onClick={() => void permission('microphone')}>Gestisci</Button></div><div><span>Accessibilità e inserimento testo</span><b>{permissions?.accessibility ? 'Consentito' : 'Richiesto per inserimento'}</b><Button onClick={() => void permission('accessibility')}>Gestisci</Button></div></div>
+    </Card>
+    <Card className="settings-card data-card"><div className="settings-heading"><span className="settings-icon"><Download size={17}/></span><div><Eyebrow>DATI LOCALI</Eyebrow><h3>Esporta o cancella</h3></div></div><p>Statistiche e preferenze restano sul dispositivo. L’audio non viene archiviato.</p><div className="data-actions"><Button onClick={() => void act(() => exportFile('sessions', 'csv'))}>Esporta sessioni CSV</Button><Button onClick={() => void act(() => exportFile('sessions', 'json'))}>Esporta JSON</Button><Button className="danger-button" onClick={() => { if (window.confirm('Eliminare tutte le statistiche locali?')) void act(() => api.clearData('metrics')) }}><Trash2 size={14}/> Elimina statistiche</Button>{settings.history_enabled && <Button className="danger-button" onClick={() => { if (window.confirm('Eliminare tutte le trascrizioni salvate?')) void act(() => api.clearData('transcripts')) }}><Trash2 size={14}/> Elimina cronologia</Button>}<Button className="danger-button" onClick={() => { if (window.confirm('Eliminare tutti i dati locali di Dicta? Questa azione non si può annullare.')) void act(() => api.clearData('all')) }}><Trash2 size={14}/> Elimina tutti i dati</Button></div>{exported && <p className="export-confirmation" role="status">Salvato in {exported}</p>}</Card>
+    <div className="settings-save"><span>{saved && <><Check size={14}/> Modifiche salvate</>}</span><Button className="primary" onClick={save}>Salva impostazioni</Button></div>
+    {permissions?.microphone === 'denied' && <Notice tone="error">Il microfono è negato. Rivedi i permessi nelle impostazioni di macOS.</Notice>}
+  </>
+}
