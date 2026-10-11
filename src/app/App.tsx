@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
-import { AudioLines, ChartNoAxesColumnIncreasing, CircleHelp, Command, History, House, Moon, Settings2, Sun, Waves } from 'lucide-react'
+import { AudioLines, ChartNoAxesColumnIncreasing, CircleHelp, Command, History, House, Moon, Settings2, Sun } from 'lucide-react'
+import dictaMark from '../../src-tauri/icons/icon.svg'
 import { useDicta } from '../hooks/useDicta'
 import { isDesktop } from '../services/desktop'
 import { formatShortcut } from './routes'
@@ -24,7 +25,7 @@ export function App() {
   const page = route === 'home' ? <Home {...data} go={setRoute} /> : route === 'dashboard' ? <Suspense fallback={<div className="loading">Carico le statistiche…</div>}><Dashboard /></Suspense> : route === 'history' ? <HistoryPage settings={data.settings} /> : route === 'models' ? <ModelsPage {...data} /> : <SettingsPage {...data} />
   return <div className={`app ${dark ? 'dark' : ''}`}>
     <aside className="sidebar">
-      <div className="brand"><div className="brand-icon"><Waves size={19} strokeWidth={2.2} /></div><span>dicta<small>voce, in locale</small></span></div>
+      <div className="brand"><div className="brand-icon"><img src={dictaMark} alt="" /></div><span>dicta<small>voce, in locale</small></span></div>
       <div className="nav-caption">SPAZIO DI LAVORO</div>
       <nav aria-label="Navigazione principale">{nav.map(({ id, label, icon: Icon }) => <button key={id} className={`nav-link ${route === id ? 'selected' : ''}`} onClick={() => setRoute(id)}><Icon size={17} strokeWidth={1.8} /><span>{label}</span>{route === id && <i />}</button>)}</nav>
       <div className="sidebar-bottom">
