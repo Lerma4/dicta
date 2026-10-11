@@ -21,3 +21,5 @@ Rust module ownership:
 - Orchestrator: Rust Cargo/build/config/lib/main commands/runtime/state machine, scripts/docs/CI, integration and validation.
 
 No agent commits; orchestrator stages coherent milestones. Preserve other agents' files.
+
+Final extensions: Snapshot includes `recovery_pending: boolean`; `export_file(kind,format)` opens the native Save dialog and returns selected path or null (kind supports sessions/transcripts/settings, settings JSON only); `copy_text(text)` performs explicit main-window clipboard writes with a 1MB bound. Full clear removes catalog model files and restores native preferences. IPC defaults camelCase argument naming only where multiword args exist; current frontend arguments are single words and DTOs remain snake_case.

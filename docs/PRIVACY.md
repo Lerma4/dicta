@@ -1,0 +1,13 @@
+# Privacy
+
+Microphone capture starts only for an explicit dictation and closes on stop/cancel/error/sleep. Raw audio stays in bounded Rust memory and is never written to an audio file. The UI only receives levels/duration and state. Transcription runs locally through whisper.cpp; no analytics, telemetry, account, cloud inference or background model downloads exist.
+
+Only the explicit model Download command uses the network, over TLS to the pinned official Hugging Face catalog/CDN redirects. No audio/text accompanies those requests. Download cancellation, size and SHA-256 checks, same-directory temporary writes and atomic rename prevent accepting incomplete weights. The original network host/CDN can observe normal connection/IP metadata during download.
+
+SQLite stores session IDs, UTC times, statuses, counts, durations, language/model/input-mode labels and error categories. Transcript content has its own opt-in table and is off by default. Disabling history deletes existing text immediately. Data exports may include text when opted in: treat saved exports as private files. The database and exports are plaintext; use OS account protections/FileVault. No AX app title, destination app name, password or audio is stored.
+
+The original focused editable AX element is captured before overlay display. Insertion verifies the current frontmost PID, same AX element, non-secure subrole and settable selected-text attribute. If verification fails, text remains in memory and a new dictation cannot overwrite it until explicit recovery. Copy replaces the clipboard only after the user chooses it; automatic insertion never modifies the clipboard. Recovery is volatile and does not survive app termination without history opt-in.
+
+SQLite secure_delete and WAL truncation purge normal database artifacts. They cannot erase exports, external backups, APFS snapshots or SSD historical sectors. Retention is applied on startup and preference changes; its current setting governs local session rows as well as associated transcript rows. Privacy actions expose transcript-only, metrics and full resets. Full reset also removes catalog model files and restores shortcut/autostart preferences; individual model deletion is explicit in Models. Preferences can be exported as JSON.
+
+Tauri permissions allow only local event subscription to both webviews. Sensitive commands check the main-window label. There are no shell/remote-content/general filesystem IPC endpoints. CSP prohibits external scripts/objects and all network connections from the renderer. Backend errors never intentionally contain captured audio or transcript text.
