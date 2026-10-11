@@ -23,7 +23,9 @@ export function useDicta() {
     subscribe(api.onSnapshot(setSnapshot))
     subscribe(api.onProgress(value => { setProgress(value); if (value.state !== 'downloading') void api.models().then(setModels).catch(e => setError(message(e))) }))
     subscribe(api.onAudioLevel(value => setSnapshot(s => s ? { ...s, ...value } : s)))
-    return () => { active = false; unlisten.forEach(stop => stop()) }
+    const onFocus = () => { void api.permissions().then(p => active && setPermissions(p)).catch(e => active && setError(message(e))) }
+    window.addEventListener('focus', onFocus)
+    return () => { active = false; unlisten.forEach(stop => stop()); window.removeEventListener('focus', onFocus) }
   }, [refresh])
   const act = useCallback(async (job: () => Promise<unknown>) => { try { await job(); setError(''); await refresh(); return true } catch (e) { setError(message(e)); return false } }, [refresh])
   return { settings, setSettings, snapshot, setSnapshot, permissions, setPermissions, models, setModels, progress, error, setError, refresh, act }
