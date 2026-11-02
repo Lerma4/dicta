@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {"label":"main","title":"Dicta","width":1120,"height":780,"minWidth":760,"minHeight":580},
-      {"label":"overlay","title":"Dicta — Dettatura","url":"overlay.html","width":400,"height":100,"decorations":false,"transparent":true,"alwaysOnTop":true,"focus":false,"focusable":false,"visible":false,"skipTaskbar":true,"resizable":false}
+      {"label":"overlay","title":"Dicta — Dettatura","url":"overlay.html","width":72,"height":72,"decorations":false,"transparent":true,"alwaysOnTop":true,"focus":false,"focusable":false,"visible":false,"skipTaskbar":true,"resizable":false}
     ],
     "security": {"csp":"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src ipc: http://ipc.localhost; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"}
   },
