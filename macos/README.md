@@ -1,33 +1,46 @@
-# Native macOS Dicta (Preview)
+# Dicta for macOS
 
-This SwiftUI/AppKit app is an ongoing native port and does not yet replace the Tauri app. Building requires macOS 13 or later, Xcode Command Line Tools, and CMake.
+Dicta is a native app built with SwiftUI and AppKit. It requires macOS 13 or later, Xcode Command Line Tools, and CMake to build.
+
+## Build and launch
+
+From the repository root:
 
 ```sh
 bash macos/Scripts/build-app.sh
 open macos/.build/Dicta.app
 ```
 
-Grant Microphone and Accessibility access in Settings. In Models, select an installed model or explicitly download one. Whisper remains available on macOS 13+; Parakeet Ultra and V3 require macOS 14+, and Redux requires macOS 15+. A new installation on macOS 14+ defaults to Ultra; an existing saved Whisper selection is preserved. Inference never downloads a model. With the Dicta window open, focus a text field in another app and press **⌘⇧Space** to start and stop dictation. If the original field cannot be written safely, recover the transcript in Dicta using the explicit Copy action.
+The local build is ad-hoc signed and not notarized. To install it in Applications:
 
-For Rex, Dicta temporarily uses the clipboard and **⌘V** without pressing Return. Clipboard managers may see the transcript. Dicta restores the previous clipboard contents only if no other process has changed the clipboard in the meantime. Audio and inference remain local and in memory.
+```sh
+ditto macos/.build/Dicta.app /Applications/Dicta.app
+open /Applications/Dicta.app
+```
+
+On first launch, grant the Microphone and Accessibility permissions requested by macOS. Ad-hoc signing does not guarantee that permissions will remain valid after future rebuilds or app replacements.
+
+## Models and dictation
+
+The **Models** screen lists Parakeet first. Ultra and V3 require macOS 14 or later; Redux requires macOS 15. On compatible systems, a new installation selects Parakeet Ultra by default. Models are downloaded only when explicitly requested.
+
+**WhisperFlow** is the alternative for less capable hardware or older macOS versions; Whisper supports macOS 13 and later. Parakeet uses FluidAudio/Core ML on compatible systems. Whisper uses Accelerate and disables OpenMP.
+
+With Dicta open, press **⌘⇧Space** while a text field in another app is focused to start or stop dictation. If Dicta cannot safely insert text into the original field, recover it using the explicit **Copy** action. Recordings are limited to five minutes. With Rex, text insertion temporarily uses the clipboard and **⌘V**, without pressing Return.
 
 ## Local data
 
-The native app records basic statistics for completed dictations in `~/Library/Application Support/app.dicta.native/sessions.sqlite3`. Transcript history is optional, disabled by default, and stored as plaintext on this Mac. Turning history off stops saving new transcripts but does not delete existing ones. The History view can delete all saved transcripts while retaining statistics. Up to 200 recent saved transcripts are shown.
+Dictation statistics are stored in `~/Library/Application Support/app.dicta.native/sessions.sqlite3`. Transcript history is optional and disabled by default; when enabled, transcripts are stored as plaintext on this Mac. Disabling history stops new transcripts from being saved but does not delete existing ones. The History screen can delete saved transcripts while retaining statistics. Audio is not saved.
 
-Whisper uses Accelerate and explicitly disables OpenMP. Parakeet is provided by a separately built FluidAudio 0.17.3 dynamic bridge (macOS 14+) so the host remains compatible with macOS 13. Model files are downloaded on explicit request into a per-model Application Support cache; deleting a model removes only that model's cache. FluidAudio and model license/attribution information is bundled under `Contents/Resources` and documented in `THIRD_PARTY_NOTICES.md`.
+Installed models are stored in the local Application Support cache. Deleting a model removes only its cache. FluidAudio and other dependencies are documented in `THIRD_PARTY_NOTICES.md`.
 
-## Current limitations
+## Limitations and tests
 
-- The complete microphone-to-transcription-to-insertion flow and permissions have not been validated end-to-end on different hardware and apps.
-- The global shortcut is registered only while the Dicta window is open.
-- Statistics and transcript history from the Tauri app are not imported; its database is left untouched.
-- Charts, filters, exports, the dictation overlay, and the complete Settings feature set have not yet been ported.
-- Whisper inference currently uses the CPU/Accelerate backend, not Metal. Parakeet inference uses FluidAudio/Core ML on compatible macOS versions.
-- First-use Parakeet model compilation time, inference duration, and real-time factor have not been measured locally. See `docs/benchmarks/parakeet-local.md`; no model was downloaded for this change.
-- The app is ad-hoc signed, not notarized, and is not ready for distribution.
-
-Available checks:
+- The global shortcut is active only while the Dicta window is open.
+- Dictation statistics and transcript history are not imported from other Dicta installations.
+- Whisper inference uses CPU/Accelerate, not Metal.
+- Parakeet's initial compilation time and performance have not been measured locally; see `docs/benchmarks/parakeet-local.md`.
+- The build is ad-hoc signed and is not ready for public distribution.
 
 ```sh
 sh macos/Scripts/test-core.sh
