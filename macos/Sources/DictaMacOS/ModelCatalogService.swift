@@ -43,6 +43,13 @@ struct ModelCatalogService {
         }
     }
 
+    func delete(modelID: String, from directory: URL) throws {
+        guard let model = Self.models.first(where: { $0.id == modelID }) else {
+            throw ModelCatalogError.unknownModel(modelID)
+        }
+        try FileManager.default.removeItem(at: directory.appendingPathComponent(model.filename))
+    }
+
     /// This is only called following an explicit user request. Cancelling the task cancels URLSession.
     func download(modelID: String, to directory: URL, session: URLSession = .shared) async throws -> URL {
         guard let model = Self.models.first(where: { $0.id == modelID }) else {

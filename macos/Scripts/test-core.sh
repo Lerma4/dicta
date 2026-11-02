@@ -12,6 +12,7 @@ swiftc -parse-as-library \
   Sources/DictaMacOS/SessionStore.swift \
   Sources/DictaMacOS/LegacyReadOnlyRepository.swift \
   Sources/DictaMacOS/ModelCatalogService.swift \
+  Sources/DictaMacOS/ParakeetEngine.swift \
   Tests/CoreScriptTests.swift \
   -lsqlite3 -o "$binary"
 "$binary"

@@ -20,7 +20,25 @@ enum CoreScriptTests {
         try require(!TerminalRecovery.supports(bundleID: "com.example.other"), "other apps must not bypass AX checks")
         try testReadOnlyLegacyInspection()
         try await testModelCatalogVerification()
+        try testParakeetCacheIsolation()
         print("Core script tests passed.")
+    }
+
+    private static func testParakeetCacheIsolation() throws {
+        let model = ParakeetModel.all.first { $0.id == "parakeet-ultra" }!
+        let cache = ParakeetBridge.cacheDirectory(for: model)
+        try require(cache.lastPathComponent == "parakeet-ultra-coreml", "FluidAudio cache must use the repository folder")
+        let parent = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let modelCache = parent.appendingPathComponent(cache.lastPathComponent, isDirectory: true)
+        let siblingCache = parent.appendingPathComponent("parakeet-tdt-0.6b-v3-coreml", isDirectory: true)
+        try FileManager.default.createDirectory(at: modelCache, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: siblingCache, withIntermediateDirectories: true)
+        try Data("model".utf8).write(to: modelCache.appendingPathComponent("weights"))
+        try Data("other".utf8).write(to: siblingCache.appendingPathComponent("weights"))
+        try FileManager.default.removeItem(at: modelCache)
+        try require(!FileManager.default.fileExists(atPath: modelCache.path), "deleting a Parakeet model must remove its actual repository cache")
+        try require(FileManager.default.fileExists(atPath: siblingCache.appendingPathComponent("weights").path), "deleting a Parakeet model must preserve other model caches")
+        try FileManager.default.removeItem(at: parent)
     }
 
     private static func testAudioConverterInput() throws {
@@ -147,6 +165,14 @@ enum CoreScriptTests {
             throw TestFailure(description: "existing destination must be refused")
         } catch ModelCatalogError.destinationExists {}
         try require(try Data(contentsOf: existing) == before, "existing files must remain untouched")
+        do {
+            try ModelCatalogService().delete(modelID: "../other", from: directory)
+            throw TestFailure(description: "unknown model deletion must be refused")
+        } catch ModelCatalogError.unknownModel {}
+        try require(try Data(contentsOf: existing) == before, "unknown deletion must leave model untouched")
+        try ModelCatalogService().delete(modelID: "tiny", from: directory)
+        try require(!FileManager.default.fileExists(atPath: existing.path), "catalog model must be deleted")
+        try require(try Data(contentsOf: file) == payload, "other files must remain untouched")
     }
 
     private static func createFixture(at url: URL) throws {

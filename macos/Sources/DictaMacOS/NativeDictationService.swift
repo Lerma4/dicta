@@ -17,15 +17,17 @@ final class NativeDictationService: ObservableObject {
     private var startedAt: Date?
     private var timer: Timer?
     private var sessionLanguage = "it"
+    private var sessionModelID = "tiny"
 
     var recoveryPending: Bool { recoveryText != nil }
 
     func toggle(modelID: String = "tiny", language: String = "it") {
         switch phase {
-        case .recording: stopAndTranscribe(modelID: modelID)
+        case .recording: stopAndTranscribe(modelID: sessionModelID)
         case .idle, .completed, .cancelled, .error:
             guard recoveryText == nil else { message = "Recupera il testo precedente prima di iniziare."; return }
             sessionLanguage = language
+            sessionModelID = modelID
             start()
         default: break
         }
@@ -55,7 +57,7 @@ final class NativeDictationService: ObservableObject {
                         Task { @MainActor in
                             guard let self, let began = self.startedAt else { return }
                             self.elapsed = Date().timeIntervalSince(began)
-                            if self.elapsed >= 300 { self.stopAndTranscribe() }
+                            if self.elapsed >= 300 { self.stopAndTranscribe(modelID: self.sessionModelID) }
                         }
                     }
                 } catch { self.phase = .error; self.message = error.localizedDescription }
@@ -83,10 +85,20 @@ final class NativeDictationService: ObservableObject {
         phase = .processing; message = "Trascrizione locale in corso…"
         Task.detached(priority: .userInitiated) { [weak self] in
             do {
-                let model = try WhisperEngine.installedModelURL(modelID: modelID)
-                let engine = try WhisperEngine(modelURL: model)
-                let text = try engine.transcribe(pcm16kMono: samples, language: language).trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !text.isEmpty else { throw WhisperEngine.EngineError.inferenceFailed }
+                let result: String
+                if let parakeet = ParakeetModel.all.first(where: { $0.id == modelID }) {
+                    guard #available(macOS 14, *) else { throw ParakeetError.unavailable }
+                    result = try ParakeetBridge.shared.transcribe(samples, model: parakeet)
+                } else {
+                    let model = try WhisperEngine.installedModelURL(modelID: modelID)
+                    let engine = try WhisperEngine(modelURL: model)
+                    result = try engine.transcribe(pcm16kMono: samples, language: language)
+                }
+                let text = result.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !text.isEmpty else {
+                    if ParakeetModel.all.contains(where: { $0.id == modelID }) { throw ParakeetError.inferenceFailed }
+                    throw WhisperEngine.EngineError.inferenceFailed
+                }
                 await MainActor.run { [weak self] in self?.finish(text: text, target: destination, duration: duration, keepText: keepText) }
             } catch {
                 await MainActor.run { [weak self] in self?.fail(error) }
@@ -116,7 +128,7 @@ final class NativeDictationService: ObservableObject {
         if TranscriptSafety.needsReview(text) {
             recoveryText = text
             phase = .completed
-            message = "Whisper ha rilevato musica anziché parole: controlla il microfono e riprova. Il risultato non è stato inserito automaticamente."
+            message = "Il modello ha rilevato musica anziché parole: controlla il microfono e riprova. Il risultato non è stato inserito automaticamente."
             return
         }
         do {

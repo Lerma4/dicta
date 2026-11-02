@@ -15,6 +15,13 @@ final class AvailabilityTests: XCTestCase {
         XCTAssertTrue(DictaSection.models.availability.contains("Nessun download viene avviato"))
     }
 
+    func testParakeetCatalogPreservesPlatformAndModelMetadataWithoutDownloading() {
+        XCTAssertEqual(ParakeetModel.all.map(\.id), ["parakeet-ultra", "parakeet-v3", "parakeet-redux"])
+        XCTAssertEqual(ParakeetModel.all.map(\.requiredOS), [14, 14, 15])
+        XCTAssertEqual(ParakeetModel.all.map(\.approximateBytes), [630_000_000, 480_000_000, 220_000_000])
+        XCTAssertTrue(ParakeetModel.all.allSatisfy { URL(string: $0.modelURL)?.host == "huggingface.co" })
+    }
+
     func testWhisperRunsOfflineOnInMemorySilenceWhenModelIsInstalled() throws {
         let modelURL: URL
         do {
