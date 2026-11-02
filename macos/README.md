@@ -1,18 +1,36 @@
-# Dicta nativa per macOS — anteprima
+# Native macOS Dicta (Preview)
 
-Questa versione SwiftUI/AppKit è in migrazione e non sostituisce ancora l'app Tauri. Richiede macOS 13 o successivo, Command Line Tools e CMake per la compilazione.
+This SwiftUI/AppKit app is an ongoing native port and does not yet replace the Tauri app. Building requires macOS 13 or later, Xcode Command Line Tools, and CMake.
 
 ```sh
 bash macos/Scripts/build-app.sh
 open macos/.build/Dicta.app
 ```
 
-In Impostazioni concedere Microfono e Accessibilità. In Modelli selezionare un modello installato o scaricarne uno esplicitamente. Con la finestra Dicta aperta, selezionare un campo di testo in un'altra app e usare ⌘⇧Spazio per iniziare e terminare. Se l'inserimento nel campo originale non è possibile, recuperare il testo in Dicta con la copia esplicita. Per Rex l'inserimento usa temporaneamente gli appunti e ⌘V, senza inviare Invio; i gestori di appunti possono vedere il testo. Dicta ripristina gli appunti precedenti quando non sono stati modificati nel frattempo. L'audio resta in memoria e l'inferenza usa Whisper.cpp localmente.
+Grant Microphone and Accessibility access in Settings. In Models, select an installed model or explicitly download one. With the Dicta window open, focus a text field in another app and press **⌘⇧Space** to start and stop dictation. If the original field cannot be written safely, recover the transcript in Dicta using the explicit Copy action.
 
-La versione nativa registra statistiche essenziali delle dettature completate in `~/Library/Application Support/app.dicta.native/sessions.sqlite3`. La cronologia testuale è facoltativa, disattivata inizialmente e salvata in chiaro sul Mac; disattivarla interrompe i nuovi salvataggi senza eliminare i testi già presenti. Il pulsante nella cronologia li elimina mantenendo le statistiche. La vista mostra fino a 200 trascrizioni recenti.
+For Rex, Dicta temporarily uses the clipboard and **⌘V** without pressing Return. Clipboard managers may see the transcript. Dicta restores the previous clipboard contents only if no other process has changed the clipboard in the meantime. Audio and inference remain local and in memory.
 
-La build usa Accelerate e disattiva esplicitamente OpenMP: la libreria Homebrew disponibile su macOS 26 richiede macOS 26, mentre Dicta dichiara il supporto da macOS 13. Non è stato misurato l'impatto sulle prestazioni.
+## Local data
 
-**Limiti:** il percorso microfono → trascrizione → inserimento e i permessi non sono stati verificati end-to-end. La scorciatoia è attiva solo mentre la finestra è aperta. Le statistiche e la cronologia della versione Tauri non vengono ancora importate; il database precedente non viene modificato. Grafici, filtri, esportazione, overlay e impostazioni complete non sono ancora migrati. L'inferenza utilizza CPU, non Metal. L'app è firmata ad hoc, non notarizzata e non è pronta per la distribuzione.
+The native app records basic statistics for completed dictations in `~/Library/Application Support/app.dicta.native/sessions.sqlite3`. Transcript history is optional, disabled by default, and stored as plaintext on this Mac. Turning history off stops saving new transcripts but does not delete existing ones. The History view can delete all saved transcripts while retaining statistics. Up to 200 recent saved transcripts are shown.
 
-Verifiche disponibili: `sh macos/Scripts/test-core.sh`. `swift test --package-path macos` richiede una toolchain con XCTest.
+The native app uses Accelerate and explicitly disables OpenMP. The available Homebrew OpenMP library on this machine targets macOS 26, while Dicta's native build targets macOS 13 and later. Performance impact has not been benchmarked.
+
+## Current limitations
+
+- The complete microphone-to-transcription-to-insertion flow and permissions have not been validated end-to-end on different hardware and apps.
+- The global shortcut is registered only while the Dicta window is open.
+- Statistics and transcript history from the Tauri app are not imported; its database is left untouched.
+- Charts, filters, exports, the dictation overlay, and the complete Settings feature set have not yet been ported.
+- Whisper inference currently uses the CPU/Accelerate backend, not Metal.
+- The app is ad-hoc signed, not notarized, and is not ready for distribution.
+
+Available checks:
+
+```sh
+sh macos/Scripts/test-core.sh
+swift build -c release --package-path macos
+```
+
+`swift test --package-path macos` requires a toolchain that includes XCTest.
