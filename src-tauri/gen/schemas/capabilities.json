@@ -1,1 +1,0 @@
-{"main":{"identifier":"main","description":"Local Dicta UI events only; sensitive operations are validated by Rust.","local":true,"windows":["main","overlay"],"permissions":["core:event:allow-listen","core:event:allow-unlisten"]}}

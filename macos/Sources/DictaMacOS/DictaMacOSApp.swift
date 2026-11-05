@@ -152,7 +152,7 @@ private struct ModelsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Modelli vocali").font(.largeTitle.weight(.semibold))
-            Text("I modelli vengono scaricati solo su richiesta e conservati in cache in Application Support. I modelli Whisper sono condivisi con la versione Tauri di Dicta.")
+            Text("I modelli vengono scaricati solo su richiesta e conservati in cache in Application Support.")
                 .foregroundStyle(.secondary).frame(maxWidth: 650, alignment: .leading)
             Button("Licenze e riconoscimenti offline") {
                 if let url = Bundle.main.url(forResource: "THIRD_PARTY_NOTICES", withExtension: "md") {
@@ -264,7 +264,7 @@ private struct ModelsView: View {
             Button("Annulla", role: .cancel) {}
         } message: { item in
             switch item {
-            case .whisper(let model): Text("\(model.name) verrà eliminato anche per la versione Tauri di Dicta. Potrai scaricarlo nuovamente.")
+            case .whisper(let model): Text("\(model.name) verrà eliminato dalla cache locale. Potrai scaricarlo nuovamente.")
             case .parakeet(let model): Text("\(model.name) e i suoi file in cache verranno eliminati. Potrai scaricarlo di nuovo.")
             }
         }
